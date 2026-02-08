@@ -41,7 +41,9 @@ jobs:
             libegl1-mesa \
             libgles2-mesa \
             libxrender1 \
-            libxkbcommon0
+            libxkbcommon0 \
+            libgbm1 \
+            libdrm2
 
       - name: Generate Video Assets
         run: |
@@ -66,7 +68,11 @@ jobs:
           # Increase Node memory limit
           NODE_OPTIONS: "--max-old-space-size=4096"
           # Explicitly set ANGLE platform to swiftshader
-          ANGLE_DEFAULT_PLATFORM: swiftshader 
+          ANGLE_DEFAULT_PLATFORM: swiftshader
+          # Ensure CI flag is set for Main.tsx logic
+          CI: 'true'
+          # Additional WebGL handling for headless environments
+          LIBGL_ALWAYS_INDIRECT: 1 
 
       - name: Upload Video Artifact
         uses: actions/upload-artifact@v4
