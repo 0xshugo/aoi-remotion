@@ -11,6 +11,25 @@ import { SubspaceScene } from './Subspace';
 import { NoiseLayer } from './components/NoiseLayer';
 // import { SONG_CONFIG, getFrames } from './config'; // Use hardcoded values for verification
 
+// Enhanced CI check
+const isCI = () => {
+    return (
+        process.env.CI === 'true' ||
+        process.env.NODE_ENV === 'production' ||
+        typeof window === 'undefined'
+    );
+};
+
+// Safe wrapper to prevent WebGL crashes in CI
+const SafeLightLeak: React.FC<{
+    durationInFrames?: number;
+    seed?: number;
+    hueShift?: number;
+}> = (props) => {
+    if (isCI()) return null;
+    return <LightLeak {...props} />;
+};
+
 export const Main: React.FC = () => {
     // BPM 72 -> 1 beat = 25 frames, 1 bar = 100 frames
     const BAR_FRAMES = 100;
@@ -59,10 +78,7 @@ export const Main: React.FC = () => {
             {/* 1. Intro -> Reflective (Flash) */}
             <Sequence from={transition1Start - 15} durationInFrames={30}>
                 <AbsoluteFill>
-                    {/* Disable LightLeak in CI to prevent WebGL errors */}
-                    {process.env.CI ? null : (
-                        <LightLeak durationInFrames={30} seed={10} hueShift={180} />
-                    )}
+                    <SafeLightLeak durationInFrames={30} seed={10} hueShift={180} />
                     <div className="w-full h-full bg-white opacity-20 mix-blend-overlay" />
                 </AbsoluteFill>
             </Sequence>
