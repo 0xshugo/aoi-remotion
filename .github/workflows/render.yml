@@ -33,6 +33,16 @@ jobs:
       - name: Setup FFmpeg
         uses: federicocarboni/setup-ffmpeg@v3
 
+      - name: Install Graphics Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgl1-mesa-glx \
+            libegl1-mesa \
+            libgles2-mesa \
+            libxrender1 \
+            libxkbcommon0
+
       - name: Generate Video Assets
         run: |
           cd public/assets/videos
@@ -54,7 +64,9 @@ jobs:
           # Increase chrome timeout just in case
           REMOTION_BROWSER_LAUNCH_TIMEOUT: 120000
           # Increase Node memory limit
-          NODE_OPTIONS: "--max-old-space-size=4096" 
+          NODE_OPTIONS: "--max-old-space-size=4096"
+          # Explicitly set ANGLE platform to swiftshader
+          ANGLE_DEFAULT_PLATFORM: swiftshader 
 
       - name: Upload Video Artifact
         uses: actions/upload-artifact@v4
