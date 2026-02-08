@@ -6,7 +6,7 @@ on:
       resolution:
         description: 'Rendering Resolution'
         required: true
-        default: '720p' # Safer default for memory limited runners
+        default: '1080p'
         type: choice
         options:
           - '1080p'
@@ -15,35 +15,53 @@ on:
 jobs:
   render:
     runs-on: ubuntu-latest
+    env:
+      CI: 'true'
+      NODE_ENV: 'production'
+      REMOTION_BROWSER_LAUNCH_TIMEOUT: 120000
+      ANGLE_DEFAULT_PLATFORM: swiftshader
+      LIBGL_ALWAYS_INDIRECT: 1
+      NODE_OPTIONS: "--max-old-space-size=4096"
+      DISPLAY: :99
+
     steps:
       - uses: actions/checkout@v4
         with:
-          lfs: true # Ensure large files are downloaded if present
+          lfs: true
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      - name: Install Dependencies
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ffmpeg \
+            libgl1-mesa-glx \
+            libxrender1 \
+            libxkbcommon0 \
+            libegl1-mesa \
+            libgles2-mesa \
+            libgbm1 \
+            libdrm2 \
+            xvfb \
+            x11-utils \
+            mesa-utils
+
+      - name: Setup Virtual Display (Xvfb)
+        run: |
+          Xvfb :99 -screen 0 1920x1080x24 &
+          echo "Started Xvfb on :99"
+
+      - name: Install Node Dependencies
         run: |
           npm ci
           npx remotion --version
 
-      - name: Setup FFmpeg
+      - name: Setup FFmpeg (Latest Action)
         uses: federicocarboni/setup-ffmpeg@v3
-
-      - name: Install Graphics Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libgl1-mesa-glx \
-            libegl1-mesa \
-            libgles2-mesa \
-            libxrender1 \
-            libxkbcommon0 \
-            libgbm1 \
-            libdrm2
 
       - name: Generate Video Assets
         run: |
@@ -60,22 +78,23 @@ jobs:
           ls -R ../..
 
       - name: Render Video
-        # Force concurrency=1 and use software rendering (swangle) for stability
-        run: npx remotion render src/remotion/index.ts EcosDelSistema out/video.mp4 --concurrency=1 --gl=swangle --log=verbose
-        env:
-          # Increase chrome timeout just in case
-          REMOTION_BROWSER_LAUNCH_TIMEOUT: 120000
-          # Increase Node memory limit
-          NODE_OPTIONS: "--max-old-space-size=4096"
-          # Explicitly set ANGLE platform to swiftshader
-          ANGLE_DEFAULT_PLATFORM: swiftshader
-          # Ensure CI flag is set for Main.tsx logic
-          CI: 'true'
-          # Additional WebGL handling for headless environments
-          LIBGL_ALWAYS_INDIRECT: 1 
+        run: |
+          npx remotion render \
+            src/remotion/index.ts \
+            EcosDelSistema \
+            out/video.mp4 \
+            --gl=swangle \
+            --log=verbose \
+            --concurrency=1
 
       - name: Upload Video Artifact
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: ecos-del-sistema-${{ inputs.resolution }}
           path: out/video.mp4
+          retention-days: 30
+      
+      - name: Cleanup
+        if: always()
+        run: pkill -f Xvfb || true
