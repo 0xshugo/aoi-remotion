@@ -10,6 +10,7 @@ Config.setVideoImageFormat("jpeg");
 
 // Optimized Chromium options for CI environment
 if (process.env.CI === 'true') {
+    // @ts-ignore
     Config.setChromiumOptions({
         headless: true,
         gl: 'swangle', // Force swangle at config level
