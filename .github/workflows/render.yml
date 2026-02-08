@@ -6,7 +6,7 @@ on:
       resolution:
         description: 'Rendering Resolution'
         required: true
-        default: '1080p'
+        default: '720p' # Safer default for memory limited runners
         type: choice
         options:
           - '1080p'
@@ -17,7 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+        with:
+          lfs: true # Ensure large files are downloaded if present
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
