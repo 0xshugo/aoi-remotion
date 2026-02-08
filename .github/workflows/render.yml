@@ -29,12 +29,18 @@ jobs:
       - name: Install FFmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
-      # Ensure assets exist (download from remote if not in repo, but here we assume they are checked in)
-      # If they are very large (>100MB), LFS setup might be needed.
-      # Assuming 'assets/' are in the repo.
-
-      # Build Check (Optional)
-      # - run: npm run build
+      - name: Generate Video Assets
+        run: |
+          cd public/assets/videos
+          
+          # 1. Generate Reverse
+          ffmpeg -i scene2.mp4 -vf reverse -an scene2_reverse.mp4
+          
+          # 2. Generate PingPong (Combine Forward + Reverse)
+          printf "file 'scene2.mp4'\nfile 'scene2_reverse.mp4'" > list.txt
+          ffmpeg -f concat -safe 0 -i list.txt -c copy scene2_pingpong.mp4
+          
+          ls -lh
 
       - name: Render Video
         run: npx remotion render src/remotion/index.ts EcosDelSistema out/video.mp4 --gl=angle --log=verbose
