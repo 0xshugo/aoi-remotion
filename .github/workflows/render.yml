@@ -44,15 +44,17 @@ jobs:
           printf "file 'scene2.mp4'\nfile 'scene2_reverse.mp4'" > list.txt
           ffmpeg -f concat -safe 0 -i list.txt -c copy scene2_pingpong.mp4
           
-          # Debug: Verify assets exist
-          ls -lh
+          # Debug: Verify assets exist (Video & Audio)
+          ls -R ../..
 
       - name: Render Video
-        # Force concurrency=1 to avoid OOM on standard runners
-        run: npx remotion render src/remotion/index.ts EcosDelSistema out/video.mp4 --concurrency=1 --gl=angle --log=verbose
+        # Force concurrency=1 and use software rendering (swangle) for stability
+        run: npx remotion render src/remotion/index.ts EcosDelSistema out/video.mp4 --concurrency=1 --gl=swangle --log=verbose
         env:
-          # Increase chrome timeout if needed
-          REMOTION_BROWSER_LAUNCH_TIMEOUT: 60000 
+          # Increase chrome timeout just in case
+          REMOTION_BROWSER_LAUNCH_TIMEOUT: 120000
+          # Increase Node memory limit
+          NODE_OPTIONS: "--max-old-space-size=4096" 
 
       - name: Upload Video Artifact
         uses: actions/upload-artifact@v4
