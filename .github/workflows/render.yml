@@ -26,10 +26,12 @@ jobs:
           node-version: 18
 
       - name: Install Dependencies
-        run: npm ci
+        run: |
+          npm ci
+          npx remotion --version
 
-      - name: Install FFmpeg
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Setup FFmpeg
+        uses: federicocarboni/setup-ffmpeg@v3
 
       - name: Generate Video Assets
         run: |
