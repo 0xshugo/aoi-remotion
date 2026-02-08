@@ -59,7 +59,10 @@ export const Main: React.FC = () => {
             {/* 1. Intro -> Reflective (Flash) */}
             <Sequence from={transition1Start - 15} durationInFrames={30}>
                 <AbsoluteFill>
-                    <LightLeak durationInFrames={30} seed={10} hueShift={180} />
+                    {/* Disable LightLeak in CI to prevent WebGL errors */}
+                    {process.env.CI ? null : (
+                        <LightLeak durationInFrames={30} seed={10} hueShift={180} />
+                    )}
                     <div className="w-full h-full bg-white opacity-20 mix-blend-overlay" />
                 </AbsoluteFill>
             </Sequence>
