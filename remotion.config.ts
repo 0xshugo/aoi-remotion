@@ -8,4 +8,21 @@ import { webpackOverride } from "./src/remotion/webpack-override.mjs";
 
 Config.setVideoImageFormat("jpeg");
 
+// Optimized Chromium options for CI environment
+if (process.env.CI === 'true') {
+    Config.setChromiumOptions({
+        headless: true,
+        gl: 'swangle', // Force swangle at config level
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-gpu',
+            '--disable-dev-shm-usage',
+            '--disable-extensions',
+            '--disable-plugins',
+            '--disable-web-security',
+        ],
+    });
+}
+
 Config.overrideWebpackConfig(webpackOverride);
