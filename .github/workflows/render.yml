@@ -1,0 +1,49 @@
+name: Render Video
+
+on:
+  workflow_dispatch:
+    inputs:
+      resolution:
+        description: 'Rendering Resolution'
+        required: true
+        default: '1080p'
+        type: choice
+        options:
+          - '1080p'
+          - '720p'
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Install FFmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      # Ensure assets exist (download from remote if not in repo, but here we assume they are checked in)
+      # If they are very large (>100MB), LFS setup might be needed.
+      # Assuming 'assets/' are in the repo.
+
+      # Build Check (Optional)
+      # - run: npm run build
+
+      - name: Render Video
+        run: npx remotion render src/remotion/index.ts EcosDelSistema out/video.mp4 --gl=angle --log=verbose
+        env:
+          # Increase chrome timeout if needed
+          REMOTION_BROWSER_LAUNCH_TIMEOUT: 60000 
+
+      - name: Upload Video Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ecos-del-sistema-${{ inputs.resolution }}
+          path: out/video.mp4
